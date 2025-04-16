@@ -1,0 +1,38 @@
+# Core dependencies
+click>=8.0.0
+flask>=2.0.0
+python-json-logger>=2.0.0
+
+# Database and data processing
+pyspark>=3.2.0
+psycopg2-binary>=2.9.0
+pandas>=1.4.0
+psutil>=5.8.0  # System monitoring
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=3.0.0
+
+# Logging and monitoring
+python-json-logger>=2.0.0
+agenttrace
+
+# Development tools
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.950
+
+# Optional - Web dashboard enhancements
+flask-cors>=3.0.0
+
+# Web dashboard dependencies
+Werkzeug>=2.0.0  # WSGI utilities
+Jinja2>=3.0.0  # Template engine
+itsdangerous>=2.0.0  # Security-related helpers
+
+# Additional utilities
+python-dotenv>=1.0.0  # Environment variable management
+requests>=2.26.0  # HTTP library for API calls
+google-generativeai>=0.3.0  # Google Generative AI SDK for Gemini Pro
+anthropic>=0.7.0  # Anthropic API client for Claude 
+tabulate  # Added for CLI table output 

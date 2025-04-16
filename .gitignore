@@ -1,0 +1,6 @@
+venv
+.env
+src/__pycache__
+logs/sierra.logs
+traces.db
+.DS_Store

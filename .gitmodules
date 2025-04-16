@@ -1,0 +1,3 @@
+[submodule "agenttrace"]
+	path = agenttrace
+	url = https://github.com/tensorstax/agenttrace.git

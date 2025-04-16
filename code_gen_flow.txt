@@ -1,0 +1,38 @@
+Input: The process starts when the agent loop calls generator.generate_from_nl(request), passing the user's natural language request.
+Schema Acquisition (Interaction with PostgreSQL):
+Before generating code, the generator needs to know what tables and columns are available in the database.
+It calls format_schema_for_llm().
+This triggers _refresh_schema_cache() (if the cache is old).
+_refresh_schema_cache() connects to your PostgreSQL database (_get_db_connection()) and queries the information_schema to get a list of tables and their columns/primary keys in the public schema.
+This schema information is stored locally in self._schema_cache.
+format_schema_for_llm() then formats this cached schema into a string.
+Critically: At this stage, the generator only reads metadata (table/column names) from PostgreSQL, not the actual data within the tables. This is efficient and correct for informing the code generation process.
+Prompt Construction:
+The generator takes the original natural language request and the formatted_schema string.
+It combines these into a detailed prompt for the Claude LLM using _construct_prompt().
+This prompt explicitly instructs Claude to:
+Generate Spark code based on the request and the provided schema.
+Use the specific, globally defined function read_table(table_name) to load data (and not spark.read.table or spark.read.jdbc).
+Include error handling and comments.
+Return the result strictly as a JSON object with specific fields (code, description, etc.).
+Code Generation (Interaction with LLM):
+_cached_generate() sends the constructed prompt to the Claude API.
+Claude processes the request, using the schema context, and generates the logic part of the Spark code.
+The response (ideally the JSON string) is received.
+Parsing and Packaging:
+_parse_claude_response() extracts and parses the JSON string from Claude's response. It handles potential extra text around the JSON block.
+generate_from_nl() retrieves the generated code logic string from the parsed JSON (generated["code"]).
+It retrieves the tables_used list identified by Claude (generated.get("tables_used", [])).
+Crucially, it prepends self.spark_prelude to the code logic received from Claude. self.spark_prelude contains:
+Standard PySpark imports (SparkSession, functions, types).
+The code to initialize the SparkSession (spark = SparkSession.builder...).
+The Python definition of the read_table(table_name) function, which internally uses spark.read.jdbc with the correct connection parameters (read from environment variables).
+It packages this complete code string, along with metadata like description and tables_used, into a GeneratedCode object.
+Output: The GeneratedCode object, containing the full, ready-to-execute Spark script (prelude + generated logic), is returned to the agent loop.
+Evaluation of Correctness:
+NL -> Schema: Yes, the natural language request is correctly combined with schema information obtained from PostgreSQL before being sent for code generation.
+Schema -> Spark Code: Yes, the schema informs the LLM's code generation process.
+Spark Code Generation -> PostgreSQL Data Access: Yes, the generator correctly prepares the code to access PostgreSQL data during execution by:
+Instructing the LLM to use read_table().
+Including the definition of read_table() (which uses spark.read.jdbc) in the final code output via the spark_prelude.
+In summary: The logic within code_generator.py correctly implements the desired flow. It uses PostgreSQL only to get the necessary schema information upfront, combines that with the user's request to prompt the LLM effectively, and constructs a complete Spark script that includes the necessary setup and the custom data-loading function (read_table) required for later execution against the actual PostgreSQL data. The explicit instruction to use read_table() and not spark.read.table/jdbc directly in the generated logic is key to making this work correctly.

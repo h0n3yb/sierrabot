@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIERRA</title>
+    <style>
+        :root {
+            --primary-bg: #1F1F1F;
+            --secondary-bg: #323232; /* Slightly lighter dark */
+            --accent-color: #E76F3C; /* Orange accent */
+            --text-color: #E0E0E0; /* Light gray, not pure white */
+            --text-secondary-color: #A0A0A0; /* Medium gray for less emphasis */
+            --border-color: #444444; /* Darker border */
+            --error-color: #FF6B6B; /* Softer red */
+            --success-color: #51CF66; /* Softer green */
+            --processing-color: #FFD43B; /* Yellow for processing */
+            --pending-color: #909090; /* Gray for pending/skipped */
+            --confirmation-color: #4DABF7; /* Blue for confirmation state if needed */
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background-color: var(--secondary-bg);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        h1, h2, h3 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+        }
+
+        .input-section {
+            background-color: var(--secondary-bg);
+            padding: 2rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            background-color: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-color); /* Keep accent on focus */
+            box-shadow: 0 0 0 2px rgba(231, 111, 60, 0.3); /* Subtle focus ring */
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: rgba(255, 87, 34, 0.8);
+        }
+
+        button#cancel-button {
+             background-color: var(--text-secondary-color);
+        }
+        button#cancel-button:hover {
+             background-color: #707070;
+        }
+
+        .results-section {
+            background-color: var(--secondary-bg);
+            padding: 2rem;
+            border-radius: 4px;
+            min-height: 200px;
+        }
+
+        .error {
+            color: var(--error-color);
+            margin-bottom: 1rem;
+        }
+
+        .success {
+            color: var(--success-color);
+            margin-bottom: 1rem;
+        }
+
+        #transformationHistory {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .loading {
+            display: none;
+            color: var(--accent-color);
+            margin: 1rem 0;
+        }
+
+        #workflow-container {
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 4px; /* Keep subtle rounding */
+            background-color: var(--secondary-bg);
+        }
+
+        .workflow-step {
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+            border-radius: 3px; /* Slightly less rounding */
+            background-color: var(--primary-bg); /* Use primary dark for step background */
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        
+        /* Status border colors */
+        .workflow-step.pending { border-left: 4px solid var(--pending-color); }
+        .workflow-step.processing { border-left: 4px solid var(--processing-color); animation: pulseBorder 1.5s infinite; }
+        .workflow-step.completed { border-left: 4px solid var(--success-color); }
+        .workflow-step.failed { border-left: 4px solid var(--error-color); }
+        .workflow-step.skipped { border-left: 4px solid var(--pending-color); opacity: 0.7; }
+
+        .step-header {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            background-color: var(--secondary-bg); /* Use secondary dark for header */
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .status-icon {
+            width: 18px; /* Fixed width */
+            height: 18px;
+            border-radius: 50%; /* Make it circular */
+            margin-right: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em; /* Adjust size of potential inner icon/text */
+            font-weight: bold;
+            color: var(--primary-bg); /* Dark text on light icon bg */
+        }
+        
+        /* Icon background colors based on status */
+        .workflow-step.pending .status-icon { background-color: var(--pending-color); }
+        .workflow-step.processing .status-icon { background-color: var(--processing-color); }
+        .workflow-step.completed .status-icon { background-color: var(--success-color); }
+        .workflow-step.failed .status-icon { background-color: var(--error-color); }
+        .workflow-step.skipped .status-icon { background-color: var(--pending-color); }
+
+        .step-name {
+            flex-grow: 1;
+            font-weight: 500; /* Slightly less bold */
+            color: var(--text-color);
+        }
+
+        .toggle-details {
+            font-size: 1.1em; /* Make arrow slightly bigger */
+            color: var(--text-secondary-color);
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .toggle-details:hover {
+            color: var(--text-color);
+        }
+
+        .step-details {
+            padding: 0; /* Remove padding, apply to pre directly */
+            background-color: var(--primary-bg); /* Match step background */
+            max-height: 0; /* Start collapsed */
+            overflow: hidden; /* Hide content when collapsed */
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+        
+        .step-details.visible {
+             max-height: 400px; /* Adjust max height as needed */
+             padding: 15px; 
+             border-top: 1px solid var(--border-color);
+        }
+
+        .step-details pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: var(--secondary-bg); /* Slightly different bg for pre */
+            padding: 12px;
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9em;
+            margin-top: 0;
+            color: var(--text-color);
+        }
+
+        pre.step-error {
+            color: var(--error-color);
+            border-color: var(--error-color);
+        }
+        
+        /* Remove old pulse animation affecting background */
+        /* @keyframes pulse { ... } */
+        
+        @keyframes pulseBorder {
+            0% { border-left-color: var(--processing-color); }
+            50% { border-left-color: var(--accent-color); }
+            100% { border-left-color: var(--processing-color); }
+        }
+        
+        #results-container pre,
+        #error-container pre,
+        #confirmation-area pre {
+             background-color: var(--primary-bg);
+             border: 1px solid var(--border-color);
+             color: var(--text-color);
+        }
+        
+        #error-container pre {
+            color: var(--error-color);
+        }
+        
+        /* Style history items */
+        #history .history-item {
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            color: var(--text-secondary-color);
+        }
+        #history .history-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        #history .history-item strong {
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>SIERRA</h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="input-section">
+            <h2>Enter Transformation Request</h2>
+            <textarea id="instruction-input" placeholder="Enter your natural language transformation request here...\nExample: show me all customers who made purchases in the last month"></textarea>
+            <form id="transform-form" style="display: inline;">
+                 <button type="submit">Transform</button>
+            </form>
+            <div style="margin-top: 10px; margin-bottom: 10px;">
+                <input type="checkbox" id="use-schema-tool-toggle" name="use-schema-tool" checked>
+                <label for="use-schema-tool-toggle" style="color: var(--text-secondary-color); font-size: 0.9em;">Enable Schema Exploration Tool (Allows AI to ask for schema details like distinct values)</label>
+            </div>
+            <div id="loading" class="loading">Processing transformation...</div>
+        </section>
+
+        <section id="transformationHistory">
+            <h2>Transformation History</h2>
+            <div id="history"></div>
+            <button onclick="clearHistory()" style="margin-top: 10px;">Clear History</button>
+        </section>
+
+        <div id="workflow-container" style="margin-top: 20px;">
+            <h2>Agent Workflow</h2>
+            <div id="workflow-steps">
+                <!-- Workflow steps will be dynamically added here -->
+            </div>
+        </div>
+
+        <div id="results-container" style="display: none; margin-top: 20px; background-color: var(--secondary-bg); padding: 1rem; border-radius: 4px;">
+            <h2>Transformation Result</h2>
+            <pre id="result-data" style="background-color: var(--primary-bg); padding: 10px; border-radius: 3px; border: 1px solid var(--accent-color);"></pre>
+        </div>
+
+        <div id="error-container" style="display: none; margin-top: 20px; background-color: var(--secondary-bg); padding: 1rem; border-radius: 4px; border-left: 5px solid var(--error-color);">
+            <h2>Error</h2>
+            <pre id="error-message" style="color: var(--error-color);"></pre>
+        </div>
+
+        <div id="confirmation-area" style="display: none; border: 1px solid var(--accent-color); padding: 15px; margin-top: 20px; background-color: var(--secondary-bg); border-radius: 4px;">
+            <h3>Confirmation Required</h3>
+            <p>Please review the proposed transformation:</p>
+            <pre id="confirmation-summary" style="background-color: var(--primary-bg); padding: 10px; border-radius: 3px; border: 1px solid var(--accent-color); margin-top: 10px; margin-bottom: 15px;"></pre>
+            <button id="confirm-button">Confirm and Proceed</button>
+            <button id="cancel-button" style="margin-left: 10px; background-color: gray;">Cancel</button>
+        </div>
+
+        <template id="workflow-step-template">
+            <div class="workflow-step pending">
+                <div class="step-header">
+                    <span class="status-icon">⏳</span>
+                    <span class="step-name">Step Name</span>
+                    <span class="toggle-details">▼</span>
+                </div>
+                <div class="step-details" style="display: none;">
+                    <pre class="step-metadata"></pre>
+                    <pre class="step-error" style="color: red;"></pre>
+                </div>
+            </div>
+        </template>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('transform-form');
+            const instructionInput = document.getElementById('instruction-input');
+            const workflowStepsContainer = document.getElementById('workflow-steps');
+            const resultsContainer = document.getElementById('results-container');
+            const resultDataElement = document.getElementById('result-data');
+            const errorContainer = document.getElementById('error-container');
+            const errorMessageElement = document.getElementById('error-message');
+            const confirmationArea = document.getElementById('confirmation-area');
+            const confirmationSummaryElement = document.getElementById('confirmation-summary');
+            const confirmButton = document.getElementById('confirm-button');
+            const cancelButton = document.getElementById('cancel-button');
+            const stepTemplate = document.getElementById('workflow-step-template');
+            const loadingIndicator = document.getElementById('loading');
+            const historyContainer = document.getElementById('history');
+
+            let currentInstruction = null;
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const instruction = instructionInput.value.trim();
+                if (!instruction) return;
+
+                resetUI();
+                currentInstruction = instruction;
+                loadingIndicator.style.display = 'block';
+                await sendTransformRequest(instruction);
+                loadingIndicator.style.display = 'none';
+            });
+
+            confirmButton.addEventListener('click', async () => {
+                if (currentInstruction) {
+                    resetUI();
+                    loadingIndicator.style.display = 'block';
+                    await sendTransformRequest(currentInstruction, true);
+                    loadingIndicator.style.display = 'none';
+                    confirmationArea.style.display = 'none';
+                    currentInstruction = null;
+                }
+            });
+
+            cancelButton.addEventListener('click', () => {
+                resetUI();
+                confirmationArea.style.display = 'none';
+                currentInstruction = null;
+            });
+
+            async function sendTransformRequest(instruction, confirm = false) {
+                const useSchemaTool = document.getElementById('use-schema-tool-toggle').checked;
+                workflowStepsContainer.innerHTML = '';
+                try {
+                    const response = await fetch('/api/transform', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ instruction, confirm, use_schema_tool: useSchemaTool })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.steps) {
+                        updateWorkflowUI(result.steps);
+                    }
+
+                    if (result.status === 'pending') {
+                        showConfirmation(result.data);
+                    } else if (result.status === 'success') {
+                        showResults(result.data);
+                        updateHistory();
+                    } else {
+                        showError(result.message || 'Transformation failed.', result.error);
+                        updateHistory();
+                    }
+
+                } catch (error) {
+                    console.error("Fetch Error:", error);
+                    showError('Failed to communicate with the server.');
+                }
+            }
+
+            function updateWorkflowUI(steps) {
+                workflowStepsContainer.innerHTML = '';
+                steps.forEach(stepData => {
+                    const stepElement = stepTemplate.content.cloneNode(true).querySelector('.workflow-step');
+                    const header = stepElement.querySelector('.step-header');
+                    const statusIcon = stepElement.querySelector('.status-icon');
+                    const stepName = stepElement.querySelector('.step-name');
+                    const toggleDetails = stepElement.querySelector('.toggle-details');
+                    const details = stepElement.querySelector('.step-details');
+                    const metadataElement = stepElement.querySelector('.step-metadata');
+                    const errorElement = stepElement.querySelector('.step-error');
+
+                    stepName.textContent = stepData.name;
+                    stepElement.classList.remove('pending', 'processing', 'completed', 'failed', 'skipped');
+
+                    let statusClass = 'pending';
+                    switch (stepData.status) {
+                        case 'completed': statusClass = 'completed'; break;
+                        case 'failed': statusClass = 'failed'; break;
+                        case 'processing': statusClass = 'processing'; break;
+                        case 'skipped': statusClass = 'skipped'; break;
+                    }
+                    stepElement.classList.add(statusClass);
+                    statusIcon.textContent = '';
+
+                    metadataElement.textContent = stepData.metadata ? JSON.stringify(stepData.metadata, null, 2) : 'No details.';
+                    if (stepData.error) {
+                        errorElement.textContent = `Error: ${stepData.error}`;
+                        errorElement.style.display = 'block';
+                        metadataElement.style.display = 'none';
+                    } else {
+                        errorElement.style.display = 'none';
+                        metadataElement.style.display = 'block';
+                    }
+                    
+                    if (!stepData.metadata && !stepData.error) {
+                         details.classList.remove('visible');
+                         toggleDetails.style.visibility = 'hidden';
+                    } else {
+                         details.classList.remove('visible');
+                         toggleDetails.style.visibility = 'visible';
+                    }
+
+                    header.addEventListener('click', (e) => {
+                        if (toggleDetails.style.visibility !== 'hidden' && (e.target === toggleDetails || !details.classList.contains('visible'))) {
+                             details.classList.toggle('visible');
+                             toggleDetails.textContent = details.classList.contains('visible') ? '▲' : '▼';
+                        }
+                    });
+
+                    stepElement.style.opacity = 0;
+                    workflowStepsContainer.appendChild(stepElement);
+                    requestAnimationFrame(() => {
+                        stepElement.style.opacity = 1;
+                    });
+                });
+            }
+
+            function showResults(resultData) {
+                resultDataElement.textContent = resultData ? JSON.stringify(resultData, null, 2) : 'No data returned.';
+                resultsContainer.style.display = 'block';
+                errorContainer.style.display = 'none';
+            }
+
+            function showError(message, details = null) {
+                errorMessageElement.textContent = message + (details ? `\n\nDetails: ${JSON.stringify(details, null, 2)}` : '');
+                errorContainer.style.display = 'block';
+                resultsContainer.style.display = 'none';
+            }
+
+            function resetUI() {
+                workflowStepsContainer.innerHTML = '';
+                resultsContainer.style.display = 'none';
+                errorContainer.style.display = 'none';
+            }
+
+            async function updateHistory() {
+                try {
+                    const response = await fetch('/api/history?limit=10');
+                    const data = await response.json();
+                    historyContainer.innerHTML = '';
+                    
+                    if (data.history && data.history.length > 0) {
+                         data.history.forEach(item => {
+                            const div = document.createElement('div');
+                            div.classList.add('history-item');
+                            
+                            const time = new Date(item.timestamp).toLocaleString();
+                            const requestP = document.createElement('p');
+                            requestP.innerHTML = `<strong>[${time}] Request:</strong> `;
+                            const requestSpan = document.createElement('span');
+                            requestSpan.textContent = item.request;
+                            requestP.appendChild(requestSpan);
+                            
+                            const statusP = document.createElement('p');
+                            const status = item.result?.status || 'unknown';
+                            const message = item.result?.message || 'No message';
+                            const statusColor = status === 'success' ? 'var(--success-color)' : 'var(--error-color)';
+                            statusP.innerHTML = `<strong>Status:</strong> <span style="color:${statusColor}">${status}</span> (${message})`;
+                            
+                            div.appendChild(requestP);
+                            div.appendChild(statusP);
+                            historyContainer.appendChild(div);
+                         });
+                    } else {
+                        historyContainer.innerHTML = '<p>No transformation history available.</p>';
+                    }
+                } catch (error) {
+                    console.error("History Error:", error);
+                    historyContainer.innerHTML = '<div class="error">Failed to load transformation history.</div>';
+                }
+            }
+            
+            async function clearHistory() {
+                 if (!confirm("Are you sure you want to clear the history?")) return;
+                 try {
+                     await fetch('/api/history/clear', { method: 'POST' });
+                     updateHistory();
+                 } catch (error) {
+                     console.error("Clear History Error:", error);
+                     alert("Failed to clear history.");
+                 }
+            }
+            
+            window.clearHistory = clearHistory;
+
+            updateHistory();
+        });
+    </script>
+</body>
+</html> 

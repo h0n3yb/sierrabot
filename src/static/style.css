@@ -1,0 +1,85 @@
+#workflow-container {
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.workflow-step {
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    background-color: white;
+    transition: all 0.3s ease-in-out; /* For animations */
+    overflow: hidden; /* Important for detail slide down */
+}
+
+.workflow-step.pending { border-left: 5px solid gray; }
+.workflow-step.processing { border-left: 5px solid orange; animation: pulse 1.5s infinite; }
+.workflow-step.completed { border-left: 5px solid green; }
+.workflow-step.failed { border-left: 5px solid red; }
+.workflow-step.awaiting_confirmation { border-left: 5px solid blue; }
+.workflow-step.skipped { border-left: 5px solid lightgray; }
+
+
+.step-header {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background-color: #f0f0f0;
+}
+
+.status-icon {
+    margin-right: 10px;
+    font-size: 1.2em;
+}
+
+.step-name {
+    flex-grow: 1;
+    font-weight: bold;
+}
+
+.toggle-details {
+    font-size: 0.8em;
+    cursor: pointer;
+}
+
+.step-details {
+    padding: 15px;
+    border-top: 1px solid #eee;
+    background-color: #fafafa;
+    max-height: 300px; /* Limit height */
+    overflow-y: auto; /* Add scroll if needed */
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out; /* Smooth dropdown */
+}
+
+.step-details pre {
+    white-space: pre-wrap; /* Wrap long lines */
+    word-wrap: break-word;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 3px;
+    border: 1px solid #eee;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.step-error {
+    color: red;
+    font-weight: bold;
+}
+
+
+@keyframes pulse {
+    0% { background-color: #f0f0f0; }
+    50% { background-color: #ffe8cc; }
+    100% { background-color: #f0f0f0; }
+}
+
+/* Initial state for fade-in animation */
+.workflow-step {
+    opacity: 1; /* Start visible */
+    transition: opacity 0.5s ease-in-out;
+}
